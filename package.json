@@ -1,0 +1,9 @@
+{
+  "name": "ai-tech-daily-brief",
+  "version": "2026.6.23",
+  "private": true,
+  "description": "ECS deployable runtime for AI tech daily brief generation and SMTP delivery.",
+  "dependencies": {
+    "playwright": "1.49.1"
+  }
+}

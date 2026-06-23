@@ -1,0 +1,14 @@
+[Unit]
+Description=Push AI tech daily brief PDF by 163 SMTP
+Wants=network-online.target docker.service
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/ai-tech-daily-brief/env
+ExecStartPre=/usr/bin/test -f /etc/ai-tech-daily-brief/env
+ExecStartPre=/bin/sh -c 'test -f /var/lib/ai-tech-daily-brief/output/ai-tech-daily-brief-$(date +%%F).pdf'
+ExecStartPre=/usr/bin/docker pull ${AI_TECH_DAILY_BRIEF_IMAGE}
+ExecStart=/usr/bin/docker run --rm --name ai-tech-daily-brief-push --env-file /etc/ai-tech-daily-brief/env -v /var/lib/ai-tech-daily-brief/output:/app/output:ro -v /var/log/ai-tech-daily-brief:/app/logs ${AI_TECH_DAILY_BRIEF_IMAGE} push
+StandardOutput=append:/var/log/ai-tech-daily-brief/push.log
+StandardError=append:/var/log/ai-tech-daily-brief/push.err.log

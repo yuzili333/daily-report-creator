@@ -1,0 +1,10 @@
+[Unit]
+Description=Run AI tech daily brief push at 09:00 Asia/Shanghai
+
+[Timer]
+OnCalendar=*-*-* 09:00:00
+Persistent=true
+Unit=ai-tech-daily-brief-push.service
+
+[Install]
+WantedBy=timers.target
