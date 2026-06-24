@@ -4,41 +4,38 @@
 
 每个条目按 1-5 分评价以下维度：
 
-- `heat`：综合热度，优先考虑 X 讨论密度、Hacker News 排名/评论、GitHub Star/Release/Issue 活跃度、官方发布影响面和二次传播强度
+- `heat`：综合热度，优先考虑 Hacker News 排名/评论、GitHub Star/Fork/Release/Issue 活跃度、官方发布影响面和二次传播强度
 - `freshness`：相对简报发送时间的新鲜度，必须在最近 24 小时内
 - `strategic_value`：对模型能力、竞争格局、开发者使用或产品决策的改变程度
 - `source_quality`：支持来源的直接性和权威性
-- `platform_signal`：该条目在 GitHub、X、Hacker News 上浮现的强度
+- `platform_signal`：该条目在 GitHub、Hacker News 上浮现的强度
 - `frontier_vendor_fit`：是否来自 OpenAI、Gemini、Anthropic、Meta、DeepSeek、ByteDance、Zhipu AI、Alibaba Cloud 等一线模型厂商，且与模型更新直接相关
 
 使用加权分：
 
 `total = heat * 0.20 + freshness * 0.20 + strategic_value * 0.25 + source_quality * 0.15 + platform_signal * 0.10 + frontier_vendor_fit * 0.10`
 
-优先级映射：
-- `P1`: total >= 4.2
-- `P2`: total >= 3.4 and < 4.2
-- `P3`: total < 3.4
+不在报告中展示优先级标签。
 
-只输出综合分最高的 10 条，并按 `total` 从高到低排序。
+只输出公开指标最高的 10 条，并按 `stars`、`forks` 从高到低排序；这些指标缺失时按 0 处理。
 
 同分时按以下顺序打破平局：
 1. `heat` 更高
-2. GitHub、X、Hacker News 信号更强
-3. 是否来自一线模型厂商并直接涉及模型更新
-4. 主源更权威
-5. 发布时间更新
+2. 综合分 `total` 更高
+3. GitHub、Hacker News 信号更强
+4. 是否来自一线模型厂商并直接涉及模型更新
+5. 主源更权威
 
 ## 摘要风格
 
 每个条目控制在一个移动端卡片内：
 
-1. 排名、优先级和日期
+1. 排名、组织、类型和日期
 2. 一句话摘要
-3. 一句话影响判断
-4. 热度依据
+3. 仓库描述
+4. Star 和 Fork 数据
 5. 来源链接
-6. 发现渠道，例如 `GitHub`、`X`、`Hacker News`
+6. 发现渠道，例如 `GitHub`、`Hacker News`
 
 整份 PDF 保持足够紧凑，使读者能在 5 分钟内扫读完 Top 10。
 
@@ -64,11 +61,17 @@ HTML 内容结构：
 - #排名
 - 标题
 - 摘要
-- 为什么重要
-- 热度依据
+- 仓库描述
+- Star 和 Fork 数据
 - 组织 / 类型 / 发现渠道 / 日期
 - 主源链接
 ```
+
+热度依据只在报告标题区域说明，不在每个资讯卡片中单独展示。
+
+- GitHub：`stars`、`forks`
+- Hacker News：`points`、`comments`
+- 不收集、不展示浏览量指标
 
 PDF 要求：
 

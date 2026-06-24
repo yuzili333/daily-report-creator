@@ -10,10 +10,11 @@
     "organization": "OpenAI",
     "type": "model",
     "summary": "...",
-    "why_it_matters": "...",
-    "heat_reason": "...",
+    "content_intro": "...",
     "primary_link": "https://...",
-    "discovery_channel": "X",
+    "discovery_channel": "GitHub",
+    "stars": 0,
+    "forks": 0,
     "heat": 5,
     "freshness": 5,
     "strategic_value": 4,
@@ -57,8 +58,10 @@ def ranked_top_items(items: list[dict], limit: int = 10) -> list[dict]:
     ranked = sorted(
         items,
         key=lambda item: (
-            weighted_score(item),
+            float(item.get("stars") or 0),
+            float(item.get("forks") or 0),
             float(item["heat"]),
+            weighted_score(item),
             float(item["platform_signal"]),
             float(item.get("frontier_vendor_fit", 3)),
             float(item["source_quality"]),
@@ -75,8 +78,6 @@ def esc(value: object) -> str:
 
 
 def render_card(index: int, item: dict) -> str:
-    score = weighted_score(item)
-    level = priority(score)
     title = esc(item["title"])
     org = esc(item.get("organization", "AI"))
     item_type = esc(item.get("type", "news"))
@@ -84,8 +85,9 @@ def render_card(index: int, item: dict) -> str:
     channel = esc(item["discovery_channel"])
     source = esc(item["primary_link"])
     summary = esc(item["summary"])
-    matters = esc(item["why_it_matters"])
-    heat_reason = esc(item.get("heat_reason", "平台热度、来源权威性和传播强度综合较高。"))
+    repo_description = esc(item.get("repo_description") or item.get("content_intro") or item.get("summary") or "")
+    stars = int(item.get("stars") or 0)
+    forks = int(item.get("forks") or 0)
 
     return f"""
       <article class="card">
@@ -94,7 +96,6 @@ def render_card(index: int, item: dict) -> str:
           <div class="rank">#{index:02d}</div>
           <div>
             <div class="meta-row">
-              <span class="badge">{level}</span>
               <span>{org}</span>
               <span>{item_type}</span>
               <span>{date}</span>
@@ -102,19 +103,12 @@ def render_card(index: int, item: dict) -> str:
             <h2>{title}</h2>
           </div>
         </header>
-        <section class="visual" aria-label="科技感视觉占位">
-          <div class="pulse"></div>
-          <div class="signal-lines"><i></i><i></i><i></i></div>
-        </section>
         <p class="summary">{summary}</p>
         <div class="insight">
-          <strong>为什么重要</strong>
-          <p>{matters}</p>
+          <strong>仓库描述</strong>
+          <p>{repo_description}</p>
         </div>
-        <div class="heat">
-          <strong>热度依据</strong>
-          <p>{heat_reason}</p>
-        </div>
+        <div class="repo-stats"><span>Stars {stars}</span><span>Forks {forks}</span></div>
         <footer>
           <span class="channel">{channel}</span>
           <a href="{source}">{source}</a>
@@ -246,45 +240,8 @@ def build_html(items: list[dict], digest_date: str) -> str:
       line-height: 1.32;
       letter-spacing: 0;
     }}
-    .visual {{
-      position: relative;
-      height: 54px;
-      margin: 10px 0;
-      border-radius: 12px;
-      border: 1px solid rgba(56, 189, 248, 0.20);
-      background:
-        linear-gradient(90deg, rgba(29, 155, 240, 0.10), rgba(34, 211, 238, 0.18)),
-        repeating-linear-gradient(90deg, transparent 0 18px, rgba(148, 163, 184, 0.08) 18px 19px);
-      overflow: hidden;
-    }}
-    .pulse {{
-      position: absolute;
-      left: 16px;
-      top: 13px;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: radial-gradient(circle, var(--cyan), rgba(29, 155, 240, 0.05) 68%);
-      box-shadow: 0 0 34px rgba(34, 211, 238, 0.55);
-    }}
-    .signal-lines {{
-      position: absolute;
-      right: 14px;
-      top: 13px;
-      display: grid;
-      gap: 6px;
-      width: 58%;
-    }}
-    .signal-lines i {{
-      display: block;
-      height: 4px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, rgba(34, 211, 238, 0.92), transparent);
-    }}
-    .signal-lines i:nth-child(2) {{ width: 78%; }}
-    .signal-lines i:nth-child(3) {{ width: 54%; }}
     .summary {{
-      margin: 0 0 9px;
+      margin: 10px 0 9px;
       font-size: 14px;
       line-height: 1.55;
     }}
@@ -305,6 +262,21 @@ def build_html(items: list[dict], digest_date: str) -> str:
       color: var(--muted);
       font-size: 13px;
       line-height: 1.55;
+    }}
+    .repo-stats {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 8px 0;
+      color: #e2e8f0;
+      font-size: 12px;
+      font-weight: 700;
+    }}
+    .repo-stats span {{
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: rgba(15, 23, 42, 0.72);
     }}
     footer {{
       display: flex;
@@ -337,7 +309,8 @@ def build_html(items: list[dict], digest_date: str) -> str:
     <section class="hero">
       <div class="eyebrow">PAST 24 HOURS · TOP 10</div>
       <h1>AI 技术每日简报</h1>
-      <p class="subtitle">{esc(digest_date)}｜按热度从高到低排序｜GitHub · X · Hacker News</p>
+      <p class="subtitle">{esc(digest_date)}｜按 Stars / Forks 从高到低排序｜GitHub · Hacker News</p>
+      <p class="subtitle">热度依据：GitHub 展示 Stars 与 Forks；Hacker News 条目按 points 与 comments 参与排序。</p>
       {count_note}
     </section>
     {cards}

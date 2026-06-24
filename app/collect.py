@@ -143,10 +143,13 @@ def hn_items(start_ts: int) -> list[dict]:
                 "organization": "Hacker News",
                 "type": "discussion",
                 "summary": f"Hacker News 在过去 24 小时出现相关讨论：{title}",
-                "why_it_matters": "HN 讨论通常能较早暴露开发者采用、质疑点和工程影响。",
-                "heat_reason": f"HN points={int(points)}，comments={int(comments)}。",
+                "repo_description": "该条目来自 Hacker News 过去 24 小时的公开讨论。",
                 "primary_link": url,
                 "discovery_channel": "Hacker News",
+                "points": int(points),
+                "comments": int(comments),
+                "stars": None,
+                "forks": None,
                 "heat": heat,
                 "freshness": freshness_score(created),
                 "strategic_value": keyword_score(text),
@@ -184,10 +187,13 @@ def github_items(start_date: str) -> list[dict]:
                 "organization": org_from_repo(full_name),
                 "type": "repository",
                 "summary": description or f"{full_name} 是过去 24 小时内新出现的 AI 相关 GitHub 仓库。",
-                "why_it_matters": "新仓库的 star/fork 增长可作为开发者兴趣和工具采用的早期信号。",
-                "heat_reason": f"GitHub stars={int(stars)}，forks={int(forks)}。",
+                "repo_description": description or f"{full_name} 是过去 24 小时内新出现的 AI 相关 GitHub 仓库。",
                 "primary_link": repo.get("html_url"),
                 "discovery_channel": "GitHub",
+                "stars": int(stars),
+                "forks": int(forks),
+                "points": None,
+                "comments": None,
                 "heat": heat,
                 "freshness": freshness_score(created),
                 "strategic_value": keyword_score(text),
@@ -197,14 +203,6 @@ def github_items(start_date: str) -> list[dict]:
             }
         )
     return items
-
-
-def x_items() -> list[dict]:
-    # X needs an approved API credential and endpoint policy. Keep it explicit instead
-    # of pretending the public web can reliably supply a production feed.
-    if not os.environ.get("X_BEARER_TOKEN"):
-        return []
-    raise NotImplementedError("X source is not implemented; configure a dedicated source adapter before enabling it")
 
 
 def dedupe(items: list[dict]) -> list[dict]:
@@ -230,7 +228,6 @@ def collect_items() -> list[dict]:
     for name, getter in (
         ("hacker-news", lambda: hn_items(start_ts)),
         ("github", lambda: github_items(start_date)),
-        ("x", x_items),
     ):
         try:
             collected.extend(getter())

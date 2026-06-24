@@ -21,8 +21,7 @@
 将以下渠道作为发现最近 24 小时内重要事项的主入口：
 
 1. GitHub Trending、关键仓库 Release、PR、Issue、Discussion、Star 增速和热门 AI 项目
-2. X 上一线模型厂商、创始人、研究员、产品负责人、开源维护者和高信号策展账号的帖子
-3. Hacker News 首页、newest、Ask/Show HN 以及 AI 相关讨论线程
+2. Hacker News 首页、newest、Ask/Show HN 以及 AI 相关讨论线程
 
 发现后，用以下来源核验：
 
@@ -53,16 +52,6 @@
 
 优先引用仓库、Release 或 PR 等可验证链接。不要只用第三方榜单或转发帖作为证据。
 
-## X 指引
-
-重点查找：
-- 官方公司账号发布的产品、模型、API、研究和价格更新
-- 创始人、模型研究员、开源维护者、基础设施负责人的源头帖子
-- 围绕同一发布形成的独立讨论簇
-- 补充具体技术细节、benchmark 限制、价格上下文、部署影响的引用帖
-
-将 X 互动量视为热度信号，不视为事实证明。
-
 ## Hacker News 指引
 
 重点查找：
@@ -79,11 +68,6 @@
 
 - `OpenAI model API release last 24 hours`
 - `Gemini Google DeepMind model update last 24 hours`
-- `X Anthropic Claude latest`
-- `X Gemini latest model launch`
-- `X OpenAI launch latest`
-- `X DeepSeek model latest`
-- `X ByteDance Seed Doubao model latest`
 - `Zhipu AI GLM model release last 24 hours`
 - `Alibaba Cloud Qwen Tongyi model release last 24 hours`
 - `GitHub OpenAI Anthropic Gemini DeepSeek Qwen GLM release last 24 hours`
@@ -118,4 +102,4 @@
 
 ## 每日运行预期
 
-假设该流程用于每天本地时间 `01:00` 的固定收集整理运行，覆盖此前 24 小时内的一线模型厂商动态、GitHub/X/Hacker News 热点和夜间升温内容。每天 `09:00` 只负责推送已生成的 PDF 简报，不重新扩大采集窗口。
+假设该流程用于每天本地时间 `01:00` 的固定收集整理运行，覆盖此前 24 小时内的一线模型厂商动态、GitHub/Hacker News 热点和夜间升温内容。每天 `09:00` 只负责推送已生成的 PDF 简报，不重新扩大采集窗口。
