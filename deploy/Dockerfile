@@ -4,7 +4,8 @@ ENV TZ=Asia/Shanghai \
     PYTHONUNBUFFERED=1 \
     OUTPUT_ROOT=/app/output \
     LOG_ROOT=/app/logs \
-    TMP_ROOT=/app/tmp
+    TMP_ROOT=/app/tmp \
+    STATE_ROOT=/app/state
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -30,7 +31,7 @@ COPY references ./references
 COPY runtime ./runtime
 COPY deploy/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-RUN mkdir -p /app/output /app/logs /app/tmp \
+RUN mkdir -p /app/output /app/logs /app/tmp /app/state \
     && chown -R ai-brief:ai-brief /app \
     && chmod +x /usr/local/bin/entrypoint.sh
 

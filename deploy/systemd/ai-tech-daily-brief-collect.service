@@ -2,11 +2,13 @@
 Description=Collect AI tech daily brief
 Wants=network-online.target docker.service
 After=network-online.target docker.service
+OnFailure=ai-tech-daily-brief-failure@%n.service
 
 [Service]
 Type=oneshot
 EnvironmentFile=/etc/ai-tech-daily-brief/env
 ExecStartPre=/usr/bin/test -f /etc/ai-tech-daily-brief/env
-ExecStart=/usr/bin/docker run --rm --name ai-tech-daily-brief-collect --env-file /etc/ai-tech-daily-brief/env -v /var/lib/ai-tech-daily-brief/output:/app/output -v /var/log/ai-tech-daily-brief:/app/logs ${AI_TECH_DAILY_BRIEF_IMAGE} collect
+ExecStartPre=/usr/bin/docker image inspect ${AI_TECH_DAILY_BRIEF_IMAGE}
+ExecStart=/usr/bin/docker run --rm --name ai-tech-daily-brief-collect --env-file /etc/ai-tech-daily-brief/env -e OUTPUT_ROOT=/app/output -e LOG_ROOT=/app/logs -e TMP_ROOT=/app/tmp -e STATE_ROOT=/app/state -v /var/lib/ai-tech-daily-brief/output:/app/output -v /var/log/ai-tech-daily-brief:/app/logs -v /var/lib/ai-tech-daily-brief/state:/app/state ${AI_TECH_DAILY_BRIEF_IMAGE} collect
 StandardOutput=append:/var/log/ai-tech-daily-brief/collect.log
 StandardError=append:/var/log/ai-tech-daily-brief/collect.err.log

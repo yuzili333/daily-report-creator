@@ -30,8 +30,12 @@ def tmp_root() -> Path:
     return Path(os.environ.get("TMP_ROOT", APP_ROOT / "tmp")).expanduser().resolve()
 
 
+def state_root() -> Path:
+    return Path(os.environ.get("STATE_ROOT", APP_ROOT / "state")).expanduser().resolve()
+
+
 def ensure_runtime_dirs() -> None:
-    for path in (output_root(), log_root(), tmp_root()):
+    for path in (output_root(), log_root(), tmp_root(), state_root()):
         path.mkdir(parents=True, exist_ok=True)
 
 
@@ -53,3 +57,11 @@ def brief_pdf_path(run_date: str) -> Path:
 
 def metadata_path(run_date: str) -> Path:
     return log_root() / f"summary-model-{run_date}.json"
+
+
+def push_sent_marker_path(run_date: str) -> Path:
+    return state_root() / f"{run_date}.push.sent"
+
+
+def push_failed_marker_path(run_date: str) -> Path:
+    return state_root() / f"{run_date}.push.failed"

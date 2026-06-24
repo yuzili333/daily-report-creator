@@ -85,6 +85,7 @@ Required runtime defaults:
 - `SMTP_USE_TLS=true`
 - `MAIL_FROM` must match `SMTP_USERNAME`
 - `SMTP_PASSWORD` must be the 163 SMTP authorization code, not the login password
+- `STATE_ROOT=/var/lib/ai-tech-daily-brief/state`
 
 ## Validation
 
@@ -114,23 +115,32 @@ docker run --rm --env-file /etc/ai-tech-daily-brief/env -v /var/lib/ai-tech-dail
 
 ```bash
 docker run --rm --env-file /etc/ai-tech-daily-brief/env \
+  -e OUTPUT_ROOT=/app/output \
+  -e LOG_ROOT=/app/logs \
+  -e STATE_ROOT=/app/state \
   -v /var/lib/ai-tech-daily-brief/output:/app/output \
   -v /var/log/ai-tech-daily-brief:/app/logs \
+  -v /var/lib/ai-tech-daily-brief/state:/app/state \
   "$AI_TECH_DAILY_BRIEF_IMAGE" collect
 
 docker run --rm --env-file /etc/ai-tech-daily-brief/env \
+  -e OUTPUT_ROOT=/app/output \
+  -e LOG_ROOT=/app/logs \
+  -e STATE_ROOT=/app/state \
   -v /var/lib/ai-tech-daily-brief/output:/app/output:ro \
   -v /var/log/ai-tech-daily-brief:/app/logs \
+  -v /var/lib/ai-tech-daily-brief/state:/app/state \
   "$AI_TECH_DAILY_BRIEF_IMAGE" push
 ```
 
-`push` fails if today's PDF does not exist.
+`push` fails if today's PDF does not exist. A successful send writes `/var/lib/ai-tech-daily-brief/state/YYYY-MM-DD.push.sent`; a failed send writes `/var/lib/ai-tech-daily-brief/state/YYYY-MM-DD.push.failed`. If today's sent marker exists, `push` exits without sending again.
 
 ## Timers
 
 ```bash
 sudo systemctl enable --now ai-tech-daily-brief-collect.timer
 sudo systemctl enable --now ai-tech-daily-brief-push.timer
+sudo systemctl enable --now ai-tech-daily-brief-push-retry.timer
 systemctl list-timers 'ai-tech-daily-brief-*'
 ```
 
@@ -138,6 +148,7 @@ Schedule:
 
 - `collect`: daily 01:00 Asia/Shanghai
 - `push`: daily 09:00 Asia/Shanghai
+- `push-retry`: daily 09:10, 09:30, and 10:00 Asia/Shanghai; it runs only when today's `.push.failed` marker exists and `.push.sent` does not exist
 
 Logs:
 
@@ -145,3 +156,16 @@ Logs:
 - `/var/log/ai-tech-daily-brief/collect.err.log`
 - `/var/log/ai-tech-daily-brief/push.log`
 - `/var/log/ai-tech-daily-brief/push.err.log`
+- `/var/log/ai-tech-daily-brief/push-retry.log`
+- `/var/log/ai-tech-daily-brief/failure.log`
+
+## Scheduler decision
+
+This project uses `systemd timer` instead of `cron`.
+
+For this ECS workload, scheduler overhead is not the bottleneck; Docker startup, network access, SMTP, and PDF generation dominate runtime. `systemd timer` is preferred because it provides Docker/network dependencies, `Persistent=true` for missed timers after reboot, unit status through `systemctl`, logs through `journalctl`, `ExecStartPre` checks, and `OnFailure` hooks for compensation.
+
+Failure handling is split into two layers:
+
+- Container layer: `push` writes `.push.sent` after success, writes `.push.failed` after send failure, and skips duplicate sends when `.push.sent` exists.
+- systemd layer: `OnFailure=ai-tech-daily-brief-failure@%n.service` records failures that happen before the container completes, including missing PDF, missing image, Docker startup failure, and environment file errors.

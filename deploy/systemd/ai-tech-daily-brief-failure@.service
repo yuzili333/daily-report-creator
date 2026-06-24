@@ -1,0 +1,9 @@
+[Unit]
+Description=Record ai-tech-daily-brief failure for %i
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/ai-tech-daily-brief/env
+ExecStart=/opt/ai-tech-daily-brief/deploy/failure-handler.sh %i
+StandardOutput=append:/var/log/ai-tech-daily-brief/failure.log
+StandardError=append:/var/log/ai-tech-daily-brief/failure.err.log

@@ -12,7 +12,7 @@ fi
 
 cd "${APP_DIR}"
 
-mkdir -p "${OUTPUT_ROOT:-/app/output}" "${LOG_ROOT:-/app/logs}" "${TMP_ROOT:-/app/tmp}"
+mkdir -p "${OUTPUT_ROOT:-/app/output}" "${LOG_ROOT:-/app/logs}" "${TMP_ROOT:-/app/tmp}" "${STATE_ROOT:-/app/state}"
 
 case "${1:-}" in
   collect)
@@ -21,7 +21,6 @@ case "${1:-}" in
     ;;
   push)
     python -m app.validate_env
-    python -m app.smtp_delivery
     python -m app.push
     ;;
   validate-env)
