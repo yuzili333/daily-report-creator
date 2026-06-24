@@ -13,6 +13,7 @@ from pathlib import Path
 
 SUMMARY_MODEL = "Pro/moonshotai/Kimi-K2.6"
 SUMMARY_PROVIDER = "moonshotai"
+SUMMARY_API_URL = "https://api.siliconflow.cn/v1/chat/completions"
 
 
 def fail(message: str) -> None:
@@ -24,6 +25,7 @@ def read_runtime_env() -> dict[str, str]:
     model = os.environ.get("SUMMARY_MODEL", SUMMARY_MODEL)
     provider = os.environ.get("SUMMARY_MODEL_PROVIDER", SUMMARY_PROVIDER)
     api_key = os.environ.get("SUMMARY_MODEL_API_KEY", "")
+    api_url = os.environ.get("SUMMARY_MODEL_API_URL", "")
     base_url = os.environ.get("SUMMARY_MODEL_BASE_URL", "")
 
     if model != SUMMARY_MODEL:
@@ -32,19 +34,45 @@ def read_runtime_env() -> dict[str, str]:
         fail(f"summary model provider must be {SUMMARY_PROVIDER}")
     if not api_key:
         fail("summary model api key missing")
+    if not api_url and not base_url:
+        fail("summary model api url missing")
 
-    return {
+    env_map = {
         "SUMMARY_MODEL": model,
         "SUMMARY_MODEL_PROVIDER": provider,
         "SUMMARY_MODEL_API_KEY": api_key,
+        "SUMMARY_MODEL_API_URL": api_url,
         "SUMMARY_MODEL_BASE_URL": base_url,
     }
+    summary_model_endpoint(env_map)
+    return env_map
+
+
+def summary_model_endpoint(env_map: dict[str, str]) -> str:
+    api_url = env_map.get("SUMMARY_MODEL_API_URL", "").strip()
+    if api_url:
+        endpoint = api_url.rstrip("/")
+        if endpoint != SUMMARY_API_URL:
+            fail(f"summary model api url must be {SUMMARY_API_URL}")
+        return endpoint
+
+    base_url = env_map.get("SUMMARY_MODEL_BASE_URL", "").strip()
+    if not base_url:
+        fail("summary model api url missing")
+    if base_url.rstrip("/").endswith("/chat/completions"):
+        endpoint = base_url.rstrip("/")
+    else:
+        endpoint = urllib.parse.urljoin(base_url.rstrip("/") + "/", "chat/completions")
+    if endpoint != SUMMARY_API_URL:
+        fail(f"summary model api url must be {SUMMARY_API_URL}")
+    return endpoint
 
 
 def write_metadata(output_path: Path, env_map: dict[str, str]) -> None:
     payload = {
         "summary_model": env_map["SUMMARY_MODEL"],
         "summary_model_provider": env_map["SUMMARY_MODEL_PROVIDER"],
+        "summary_model_api_url_configured": bool(env_map["SUMMARY_MODEL_API_URL"]),
         "summary_model_base_url_configured": bool(env_map["SUMMARY_MODEL_BASE_URL"]),
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -52,11 +80,7 @@ def write_metadata(output_path: Path, env_map: dict[str, str]) -> None:
 
 
 def connectivity_check(env_map: dict[str, str]) -> None:
-    base_url = env_map["SUMMARY_MODEL_BASE_URL"]
-    if not base_url:
-        fail("summary model base url missing")
-
-    endpoint = urllib.parse.urljoin(base_url.rstrip("/") + "/", "chat/completions")
+    endpoint = summary_model_endpoint(env_map)
     payload = {
         "model": env_map["SUMMARY_MODEL"],
         "messages": [{"role": "user", "content": "ping"}],
@@ -89,7 +113,7 @@ def main() -> None:
     parser.add_argument(
         "--check-connectivity",
         action="store_true",
-        help="Run a minimal OpenAI-compatible API call against SUMMARY_MODEL_BASE_URL",
+        help="Run a minimal OpenAI-compatible API call against SUMMARY_MODEL_API_URL or SUMMARY_MODEL_BASE_URL",
     )
     args = parser.parse_args()
 

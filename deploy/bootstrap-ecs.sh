@@ -45,12 +45,13 @@ Bootstrap complete.
 
 Next steps:
 1. Edit /etc/ai-tech-daily-brief/env and set secrets plus AI_TECH_DAILY_BRIEF_IMAGE.
-2. Validate the image and env:
-   docker pull "$AI_TECH_DAILY_BRIEF_IMAGE"
+2. Load the image artifact if it was uploaded as a tar.gz:
+   gzip -dc /opt/ai-tech-daily-brief/ai-tech-daily-brief-<version>.tar.gz | docker load
+3. Validate the image and env:
    docker run --rm --env-file /etc/ai-tech-daily-brief/env "$AI_TECH_DAILY_BRIEF_IMAGE" validate-env
    docker run --rm --env-file /etc/ai-tech-daily-brief/env "$AI_TECH_DAILY_BRIEF_IMAGE" validate-summary-model
    docker run --rm --env-file /etc/ai-tech-daily-brief/env "$AI_TECH_DAILY_BRIEF_IMAGE" validate-smtp
-3. Enable timers:
+4. Enable timers:
    systemctl enable --now ai-tech-daily-brief-collect.timer
    systemctl enable --now ai-tech-daily-brief-push.timer
 EOF

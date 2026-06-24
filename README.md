@@ -17,6 +17,38 @@ The production runtime is self-contained. It does not depend on `~/.codex/skills
 
 Use explicit version tags only. Do not use `latest` for production.
 
+For image-file based ECS deployment, build and export a reusable artifact:
+
+```bash
+scripts/build-image.sh --version v2026.06.24-1
+```
+
+This creates:
+
+```bash
+dist/images/ai-tech-daily-brief-v2026.06.24-1.tar.gz
+```
+
+Upload the image artifact and deployment templates to ECS:
+
+```bash
+scripts/upload-image-to-ecs.sh \
+  --host <ecs-ip-or-domain> \
+  --user root \
+  --artifact dist/images/ai-tech-daily-brief-v2026.06.24-1.tar.gz \
+  --image ai-tech-daily-brief:v2026.06.24-1
+```
+
+Then load the image on ECS:
+
+```bash
+cd /opt/ai-tech-daily-brief
+gzip -dc ai-tech-daily-brief-v2026.06.24-1.tar.gz | docker load
+docker images | grep ai-tech-daily-brief
+```
+
+The registry workflow is still supported when an image registry is available:
+
 ```bash
 VERSION=v2026.06.23-1
 ACR_IMAGE=registry.cn-hangzhou.aliyuncs.com/YOUR_NAMESPACE/ai-tech-daily-brief:${VERSION}
@@ -45,6 +77,9 @@ Required runtime defaults:
 
 - `SUMMARY_MODEL=Pro/moonshotai/Kimi-K2.6`
 - `SUMMARY_MODEL_PROVIDER=moonshotai`
+- `SUMMARY_MODEL_API_KEY` must be a SiliconFlow API key
+- `SUMMARY_MODEL_API_URL=https://api.siliconflow.cn/v1/chat/completions`
+- `SUMMARY_MODEL_BASE_URL=https://api.siliconflow.cn/v1` is kept only for backward compatibility
 - `SMTP_HOST=smtp.163.com`
 - `SMTP_PORT=465`
 - `SMTP_USE_TLS=true`
@@ -60,11 +95,13 @@ set -a
 . /etc/ai-tech-daily-brief/env
 set +a
 
-docker pull "$AI_TECH_DAILY_BRIEF_IMAGE"
+docker images | grep ai-tech-daily-brief
 docker run --rm --env-file /etc/ai-tech-daily-brief/env "$AI_TECH_DAILY_BRIEF_IMAGE" validate-env
 docker run --rm --env-file /etc/ai-tech-daily-brief/env "$AI_TECH_DAILY_BRIEF_IMAGE" validate-summary-model
 docker run --rm --env-file /etc/ai-tech-daily-brief/env "$AI_TECH_DAILY_BRIEF_IMAGE" validate-smtp
 ```
+
+`validate-summary-model` prefers `SUMMARY_MODEL_API_URL`. If it is not set, it builds the endpoint from `SUMMARY_MODEL_BASE_URL` by appending `/chat/completions`.
 
 SMTP send tests:
 

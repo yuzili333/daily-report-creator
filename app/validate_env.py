@@ -3,12 +3,13 @@ from __future__ import annotations
 import os
 import sys
 
+from app.validate_summary_model import summary_model_endpoint
+
 
 REQUIRED_ENV = [
     "SUMMARY_MODEL",
     "SUMMARY_MODEL_PROVIDER",
     "SUMMARY_MODEL_API_KEY",
-    "SUMMARY_MODEL_BASE_URL",
     "SMTP_HOST",
     "SMTP_PORT",
     "SMTP_USERNAME",
@@ -33,6 +34,15 @@ def validate_env() -> None:
 
     if os.environ["SUMMARY_MODEL_PROVIDER"] != "moonshotai":
         fail("SUMMARY_MODEL_PROVIDER must be moonshotai")
+
+    if not os.environ.get("SUMMARY_MODEL_API_URL") and not os.environ.get("SUMMARY_MODEL_BASE_URL"):
+        fail("SUMMARY_MODEL_API_URL or SUMMARY_MODEL_BASE_URL is required")
+    summary_model_endpoint(
+        {
+            "SUMMARY_MODEL_API_URL": os.environ.get("SUMMARY_MODEL_API_URL", ""),
+            "SUMMARY_MODEL_BASE_URL": os.environ.get("SUMMARY_MODEL_BASE_URL", ""),
+        }
+    )
 
     if os.environ["SMTP_HOST"] != "smtp.163.com":
         fail("SMTP_HOST must be smtp.163.com")
